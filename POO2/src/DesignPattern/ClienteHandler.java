@@ -1,14 +1,17 @@
 package DesignPattern;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.Socket;
 import java.util.Scanner;
 
 public class ClienteHandler implements Runnable {
     private Socket cliente;
+	private PrintStream clienteSaida;
 
-    public ClienteHandler(Socket cliente) {
+    public ClienteHandler(Socket cliente, PrintStream clienteSaida) {
         this.cliente = cliente;
+        this.clienteSaida = clienteSaida;
     }
 
     public void run() {
@@ -19,12 +22,21 @@ public class ClienteHandler implements Runnable {
             do {
                 texto = entrada.nextLine();
                 System.out.println(texto);
+                enviarParaTodos(texto);
               
             } while (!"sair".equals(texto));
+            ServidorSocket.clientes.remove(clienteSaida);
 
             cliente.close();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+    private void enviarParaTodos(String mensagem) {
+        synchronized (ServidorSocket.clientes) {
+            for (PrintStream cliente : ServidorSocket.clientes) {
+                cliente.println(mensagem);
+            }
         }
     }
 }
